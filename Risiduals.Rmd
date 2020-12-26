@@ -1,0 +1,22 @@
+```{r}
+
+df <- read.csv("real_estate2.csv")
+
+model <- lm(Price ~ ., data = df)
+summary(model)
+
+```
+
+# Risidual Analysis
+
+
+Five important assumptions need to hold so that the regression model can be useful for hypothesis testing and predication. These are:
+
+1. The relationship between the response y and the regression is linear (at least approximately).
+
+Why? This one is fairly obvious. If we are trying to explain some data using a linear model, then in order for it to be effective, there needs to be a linear relation present.
+
+2. The error term $\epsilon$ has zero mean.
+3. The error term $\epsilon$ has constant variance $\sigma^{2}$.
+4. The errors are uncorrelated.
+5. The errors are normally distributed.

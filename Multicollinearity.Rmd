@@ -1,0 +1,63 @@
+# A Brief Description of the Data
+
+Based on our analysis of the pairs plot, you probably now have some idea of what multicollinearity in a linear model is (but not why it is bad). More specifically, multicollinearity is a linear or near linear dependence between the predictors in the model. A linear dependence means that one variable is a linear combination of another (they are co-linear), and are therefore not giving us any new information. Strong correlation between two variables indicates co-linearity. Strong correlation betwen multiple predictors in our MLR model means that multicollinearity may be present.
+
+```{r}
+library(faraway)
+
+# First read in the data
+df <- read.csv("real_estate2.csv")
+
+
+# Construct our initial model 
+model <- lm(Price ~ ., data = df)
+summary(model)
+
+
+```
+
+The major symptoms of multicollinearity are:
+
+1. Estimated coefficients which have the wrong sign (for example, if the sign on Station was positive instead of negative this would be counter-intuitive)
+2. Large (inflated) standard errors and variance of the predictors. This in turn causes a lack of significance for the predictor when it seems like it should be significant (for example, we saw that Distance had a nice linear relationship with Price. It not having a significnant relationship with the Price would be a concern).
+
+Luckily, we don't see these issues present in our model, so multicollinearity is likely not an issue. To make sure, we can use a measure called the VIF (Variance Inflation Factor) computed as:
+
+VIF_{j} = 1/(1-R^{2}_{j})
+
+This factor can be interpreted as follows: the jth predictor is regressed against all other predictors and R^{2}_{j} (coefficient of determination or the square of the correlation) is computed. This is a called a partial regression. Then a large R^{2}_{j} results in a large VIF_{j}. You may be wondering about the relationship between a large R^{2} and a large standard error on our regression coefficients (i.e. how does the variance get "inflated"?). Without going into the gritty details on on how the standard error for the regression coefficient is derived in this case, the formula:
+
+
+s_{b_{j}} = s_{e} / (sqrt((1-R^{2}X_{k}))) . . .
+
+Where:
+
+X^{j} = The variable who's estimated standard error we are computing
+G_{k} = is the set of all variables except X^k
+
+shows that as R^{2}_X^{j}_G_{k} increases, the standard error of our regression coefficient also increases . This decreases the likelihood that we have significant linear relationship for that variable. Furthermore, a large standard error increases the liklihood that we get the wrong sign on our coefficient. If this whole explanition seems a bit too complicated, hopefully this intuition makes sense: If the predictors are highly correlated with each other, it becomes more difficult to determine what variance is explained by the response. As a result, the standard error of becomes large.    
+
+```{r}
+
+#Computes the VIF for every predictor
+vif(model)
+
+```
+
+The VIF command shows that multicollinearity is not an issue in our model. Note that a VIF of 10 or greater is a cause for concern. Just to illustrate some of the points I made, and to show you how multicollinearity can occur, I will add the predictor "Station2". The idea here is that the distance to the station was measured in two ways, from the closest door and from the door furthest away.
+
+```{r}
+
+set.seed(1)
+
+# Adding the secondary measurement for distance to station
+df$Station2 <- df$Station + rnorm(nrow(df), sd=3)
+
+# Construct the new model
+model <- lm(Price ~ ., data = df)
+summary(model)
+
+vif(model)
+```
+
+We can now see what impact this has on our model. The coefficient on Station is positive when it should be negative. It also no longer has a significant linear relationship. The VIF is also massive. This problem is common to many data sets, where one or more variables are essentially measuring the same object. The simple solution is to remove the redundant variables.
