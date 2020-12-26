@@ -1,9 +1,9 @@
 ```{r}
 
 df <- read.csv("real_estate2.csv")
+# df$Longitude <- NULL
 
 model <- lm(Price ~ ., data = df)
-summary(model)
 
 ```
 
@@ -14,9 +14,76 @@ Five important assumptions need to hold so that the regression model can be usef
 
 1. The relationship between the response y and the regression is linear (at least approximately).
 
-Why? This one is fairly obvious. If we are trying to explain some data using a linear model, then in order for it to be effective, there needs to be a linear relation present.
+Why? This one is fairly obvious. If we are trying to explain some data using a linear model, then in order for it to be effective, there needs to be a linear relation present. This is required for prediction.
 
 2. The error term $\epsilon$ has zero mean.
+
+Why? It should be equally probable that the errors fall above and below the regression line.
+
 3. The error term $\epsilon$ has constant variance $\sigma^{2}$.
+
+Why? This is also known as homoscedasticity or homogeneity of variance of variance. When there is unequal variance for different levels of the predictors, the parameter estimates and standard errors will not be consistent (biased) across different samples.
+
 4. The errors are uncorrelated.
+
+Why? The computation of standard errors relies on independence.  
+
 5. The errors are normally distributed.
+
+Why? Confidence intervals, hypothesis testing, and the estimated parameters are all computed under the assumption of a normal distribution.
+
+Assumptions 2 through 5 can be summarized as "The errors are i.i.d. normally distributed, with zero mean and constant variance.". Note that 4 and 5 are required for hypothesis testing and interval estimation. Probably the best way to check if these assumptions hold is to plot the standardized residuals and compare them to useful elements of you model. Luckily, R provides some simple built in commands that allow us to easily plot these relationships. Overall,I like to think of this stage as "tuning" the model.
+
+
+## Overview of the Current Model Risiduals
+
+``` {r}
+
+par(mfrow = c(2, 2))
+plot(model)
+
+```
+
+Initially, we want to get an idea of where our model stands with respect to the 5 model assumptions. What stands out to me most is that the distribution of our errors has a fairly heavy right skew (see Normal Q-Q plot). You can also see that this is slightly impacting the fit of our model which has a bit of a non-linear dent in the middle (see Risiduals vs. Fitted plot). It is not a bad fit by any means, but could probably be improved with a transformation.  
+
+
+## Transforming the Response Variable
+
+Since the major issue is the non-normality of the errors, the first approach that should be taken is a transformation on the response. This has the added benefit of also correcting the fitted relationship. Note that if the fit was the major issue, you could try only transforming the predictors. If both the predictor and the response are a major issue, then you could try transforming both. It is really a trial and error process for the most part. For a right skewed distribution, the most common transformations are a square root or log transformation.
+
+``` {r}
+
+# A log transformation on the response shows the best results
+model <- lm(log(Price) ~ ., data = df)
+summary(model)
+
+```
+
+The model has improved ever so slightly. It has definitely taken the edge of the right tail of the residual distribution, and the linear fit has less of a "dip". We can verify that the linear relationship has improved by looking the model summary $R^{2}$ (previously 0.58 and now 0.68). You may be wondering why we can perform a transformation like this and still arrive at a "valid" result. The reason is that we are applying a deterministic function to the variable that "re-scales" the data to meet some assumption. In this case, to use the result of the model for predication, we can later apply the inverse function of log (base e) which is the exponential function.
+
+## 1. The relationship between the response y and the regression is linear
+
+
+```{r}
+plot(model, which = 1)
+
+```
+
+
+You can think of this plot as the 2-d representation of our fitted model where the response, price, has been logged. A relatively straight line through the fitted values is what we are looking for here. If a proper fit is not possible through any kind of transformation, then a linear model is not appropriate for the given data set.
+
+```{r}
+plot(model, which = 2)
+
+```
+
+
+```{r}
+
+
+
+plot(model, which = 3)
+
+plot(model, which = 5)
+```
+
