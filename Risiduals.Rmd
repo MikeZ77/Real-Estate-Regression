@@ -22,7 +22,7 @@ Why? It should be equally probable that the errors fall above and below the regr
 
 3. The error term $\epsilon$ has constant variance $\sigma^{2}$.
 
-Why? This is also known as homoscedasticity or homogeneity of variance of variance. When there is unequal variance for different levels of the predictors, the parameter estimates and standard errors will not be consistent (biased) across different samples.
+Why? This is also known as homoscedasticity or homogeneity of variance. When there is unequal variance for different levels of the predictors, the parameter estimates and standard errors will not be consistent (biased) across different samples.
 
 4. The errors are uncorrelated.
 
@@ -61,7 +61,7 @@ summary(model)
 
 The model has improved ever so slightly. It has definitely taken the edge of the right tail of the residual distribution, and the linear fit has less of a "dip". We can verify that the linear relationship has improved by looking the model summary $R^{2}$ (previously 0.58 and now 0.68). You may be wondering why we can perform a transformation like this and still arrive at a "valid" result. The reason is that we are applying a deterministic function to the variable that "re-scales" the data to meet some assumption. In this case, to use the result of the model for predication, we can later apply the inverse function of log (base e) which is the exponential function.
 
-## 1. The relationship between the response y and the regression is linear
+## The relationship between the response y and the regression is linear
 
 
 ```{r}
@@ -69,21 +69,98 @@ plot(model, which = 1)
 
 ```
 
-
-You can think of this plot as the 2-d representation of our fitted model where the response, price, has been logged. A relatively straight line through the fitted values is what we are looking for here. If a proper fit is not possible through any kind of transformation, then a linear model is not appropriate for the given data set.
+You can think of the Risiduals vs Fitted plot as the 2-d representation of our fitted model where the response (price) has been logged. A relatively straight line through the fitted values is what we are looking for here. If a proper fit is not possible through any kind of transformation, then a linear model is not appropriate for the given data set.
 
 ```{r}
 plot(model, which = 2)
 
 ```
 
+## The errors are normally distributed
+
+The Normal Q-Q plot compares the standardized residuals of the model with a standard normal distribution (the diagonal line). Hence, any deviation from the diagonal means that residuals are deviating from the standard normal distribution. Even though the residuals do not line up perfectly in this case (i.e. doesn't exhibit perfect symmetry), the current state is more than acceptable. As long as the majority of the points lie along the diagonal, this should be fine.
+
+## The error term $\epsilon$ has constant variance $\sigma^{2}$.
+
+```{r}
+plot(model, which = 3)
+
+```
+
+The Scale-Location is similar to the Risiduals vs Fitted plot, except we are looking at the magnitude of the residuals. Again, we are looking for a straight line through the center to show that the average of the residuals are not change much. We can also roughly estimate the upper and lower bound of the data points to determine if the overall variability changes.
+
+## The error term $\epsilon$ has zero mean
 
 ```{r}
 
+mean(resid(model))
+```
 
+This should be evident through most of the plots. In particular, the Risiduals vs Index plot illustrates this well. Calculating the mean of the residuals shows that it is practically zero.
 
-plot(model, which = 3)
+## Residual vs. Index
+
+```{r}
+
+plot(model$residuals)
+```
+
+The Risidual vs. Index plot shows the observations index on the x-axis and its risidual on the y-axis. We want a random scattering of residuals around $\epsilon=0$ (i.e. no correlation of the errors).
+
+## Outliers and Leverage
+
+You may have noticed that there are some pretty significant outliers in the data set. For example, observation 271 is roughly 8 deviations from the mean before the transformation and 4 deviations after.The reason is that this observation has a significantly lower price relative to the other observations in the data set. Basically, when dealing with an observation like this, you want to ask yourself the question: Is this data point valid, and does it reflect what I am trying to use the data for? Invalid entries in a data set happen all the time, and should be removed at an earlier stage (in the data cleaning process). An example of an invalid data point in this data set would be something like an observation having a distance to an MRT station which is clearly impossible. The second point is a little bit more subtle. Lets say that we find out that an outlier is due to an uninsured home had an event where a broken pipe caused so much damage that the owners are just trying to sell it rather than pay for the repairs. I would argue that this is such a rare event that it should not impact on in any way the normal state of the housing market (or our model). On the other hand, the outlier could be due to poor home maintenance, which would be part of a normal state of the housing market and should be included. 
+
+```{r}
 
 plot(model, which = 5)
 ```
 
+The Risiduals vs Leverage plot uses something called the "Cook's Distance" to measure the "influence" of an observation. An outlier is a data point who's respoinse deviates significantly from the general trend of the data. A highly leveraged data point is one that extreme values for its predictors. The Cook's Distance calculation combines these two concepts and takes the product to compute the overall "influence". You can think of extreme values of the predicators as having a magnifying impact on an observation that is already an outlier. The formula for Cook's Distance is:
+
+D_{i} = ...
+
+The important part is in the numerator. Here, Y_{hat(j_{i})} is the model not including observation i and y_{hat} is the full model. The square of the summed differences for each jth observation is what contributes to D_{i}. OLS (ordinary least squares regression) is based on minimizing the sum of squares, we can see why a risidual that has extreme values for its predictors gets magnified (because it gets squared). Overall, leverage is bad because highly leveraged observations "pull" the best fit line away from the majority of observations.
+
+Now, we can actually examine the Risiduals vs Leverage plot and understand it. The dotted red line surrounding the data points is the default boundary for the Cook's Distance. The following rules are generally successful in detecting influential points:
+
+1. A D_{i} greater than 0.5 is considered moderately influential and should be examined.
+2. A D_{i} greater than 1 is highly influential and should be scrutinized.
+3. A D_{i} that is significantly greater than any other D_{i} should be examined.
+
+You can see how the logic above is reflected in the plot. Observation 114 is a significant outlier, but is not influential. Meanwhile the observation at the far right (leverage ~ 0.13), is highly leveraged, but is not an outlier. Because of its high leverage, it would take a much smaller risidual to make it influential.
+
+## Robust Regression
+
+As a side note, I want to quickly show one way of dealing with influential observations, since in some cases we may not have sufficient reason for removing it. 
+
+```{r}
+# Add an influential point to the model
+df <- rbind(
+      data.frame(
+      Transaction = 2012.667, 
+      Age = 50, 
+      Station= 150.8515, 
+      Stores = 5, 
+      Latitude = 24.92515, 
+      Longitude = 121.23737, 
+      Price = 60), 
+      df)
+
+new_model <- lm(Price ~ ., data = df)
+summary(new_model)
+plot(new_model, which = 5)
+
+```
+
+I don't want to go into too many details with this, but basically a robust regression attempts to dampen highly influential observations that violate model assumptions by applying a double exponential distribution that is the basis for re-weighting the observations. Notice how the R^2 has dropped back down to .57.
+
+```{r}
+library(MASS)
+
+robust_model <- rlm(Price ~ ., data=df)
+summary(robust_model)
+
+```
+
+The one problem with this approach is that it is not a simple matter to compute the R^{2} for this model and it is not directly comparable to 
