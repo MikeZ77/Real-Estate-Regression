@@ -1,0 +1,14 @@
+
+```{r}
+
+df <- read.csv("real_estate2.csv")
+
+model <- lm(Price ~ ., data = df)
+
+```
+
+# Model Validation
+
+If you are using your model for prediction, you will want to perform a cross validation to make sure that the performance the selected model generates is good. Although there are many ways to perform cross-validtion, I will just go over the simplest approach.
+
+1. 

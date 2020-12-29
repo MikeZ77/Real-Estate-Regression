@@ -1,0 +1,38 @@
+
+```{r}
+
+df <- read.csv("real_estate2.csv")
+
+model <- lm(Price ~ ., data = df)
+
+```
+
+# Variable Selection
+
+Variable selection is the process of iteratively choosing the most significant predictors to be added to the model. This is based on some criteria such as R^2 or something more complicated (the Akaike Information Criteria (AIC) or Baysian Extension (BIC) are options you can look into). There are several different variants of the "process" to arrive at the final model, such as forward selection, backward selection, and stepwise regression. Really, they are all very similar (variants) of each other and will produce a similar final model. Since the the choice is somewhat arbitrary, I will just go with forward selection. The algorithm takes the following steps.
+
+1. Initially all predictors are added to the set "not in the model"
+2. Iterate over all the predictors "not in the model", refitting the model with that variable at each iteration
+3. Add the variable with the lowest p-value to the set "in the model" if its p-value is less than alpha_{crit} and continue to step 1. Otherwise, if no such variable can be added, stop.
+
+The R libarary 'olsrr' implements this for us and makes the entire process completely painless. One final important point is that variable selection is a fine line between making the model as realistic as possible and as simple as possible. As an example, suppose we have model A with an R^2=0.80 and 20 predictors and model B with an R^2=0.79 and 4 predictors. Considering the fact that we only have a sample of the data, does it make sense to choose the added complexity of model A over B just because it has +0.01 in R^2. I would say definitely not. Overall, there is no "best" regression equation, instead there are several equally good ones.
+
+```{r}
+
+library('olsrr')
+
+# Run the forward selection algorithm usign a alpha of 0.05
+model <- lm(Price ~ ., data = df)
+FWDfit_p <- ols_step_forward_p(model, penter=0.05)
+FWDfit_p
+
+```
+We can see from the output that Station was added first, then Stores, and so on. Longitude was not added because its p-value was within the model at that point was greater than 0.05. All the criteria provided by the ols_step_forward_p method track each other (and every time i have run this method this has always been the case), so their is no reason to prefer one over the other. Again, we could easily see from the start that we should disclude longitude from the start, but it may not be so clear cut every time. Also, from running the forward selection, we can see that removing Transaction would also be a completely valid option. I will leave it in, so the final model will be: 
+
+Final model here ....
+
+
+
+
+
+
