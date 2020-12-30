@@ -2,13 +2,92 @@
 ```{r}
 
 df <- read.csv("real_estate2.csv")
-
+df$Longitude <- NULL
 model <- lm(Price ~ ., data = df)
-
 ```
 
 # Model Validation
 
-If you are using your model for prediction, you will want to perform a cross validation to make sure that the performance the selected model generates is good. Although there are many ways to perform cross-validtion, I will just go over the simplest approach.
+If you are using your model for prediction, you will want to perform a cross validation to make sure that the model performs well with new data. Although there are many ways to perform cross-validtion, I will just go over the simplest approach.
 
-1. 
+1. Split the data into a training set and test set
+2. Fit your model to the training set
+3. Predict the responses in the test set 
+4. Evaluate the quality of the predictions
+
+```{r}
+# Required for R2, RMSE and MAE commands
+library(caret)
+# Split the data randomly into a training set and a test set.
+set.seed(100)
+n_train <- ceiling(0.8 * length(df$Price))
+train_sample <- sample(c(1:length(df$Price)), n_train)
+train_data <- df[train_sample, ]
+test_data <- df[-train_sample, ]
+
+```
+
+80% training set and 20% test set is a typical ratio. Basically, it is a balance between maximizing the amount of data we have to fir the model, and having enough data left over to make an assessment of its performance.
+
+```{r}
+
+# Fit the model on the training data
+model <- lm(Price ~ ., data = train_data)
+predictions <- predict(model, test_data)
+
+# Measure performance by comparing the prediction with the data using multiple criterion
+R_sq <- R2(predictions, test_data$Price)
+RMSE <- RMSE(predictions, test_data$Price)
+MAE <- MAE(predictions, test_data$Price)
+
+print(c(R_sq, RMSE, MAE))
+
+```
+
+The root mean square error (RMSE) and mean absolute error (MAE) should be small on a well performing model. RMSE is a good criterion to look at. It means that on average, our prediction is for price ( dollars per square foot ) is off by $7.57. To give this a little more context, we can compute the prediction error rate by dividing RMSE by the mean response (price in this case).
+
+```{r}
+
+pred_error_rate <- RMSE / mean(test_data$Price)
+pred_error_rate
+
+```
+
+The prediction error rate is 20%. Not bad for a domain like real estate. However, it is not good enough to cross-validate only once. Look at what happens when we change the seed from 100 to 101. Our R^2 goes from 0.67 to 0.53. This happens because with a small data set like this once, there is a good chance large errors get partitioned to only the training set, or vice versa. To mitigate this possibility, we can run the cross validation multiple times and take the average of the criterion. 
+
+```{r}
+
+R_sq <- 0
+RMSE <- 0
+MAE <- 0
+
+# Choosing here to run the validation 20 times
+for(i in 1:20){
+  
+  n_train <- ceiling(0.8 * length(df$Price))
+  train_sample <- sample(c(1:length(df$Price)), n_train)
+  train_data <- df[train_sample, ]
+  test_data <- df[-train_sample, ]
+  
+  model <- lm(Price ~ ., data = train_data)
+  
+  predictions <- predict(model, test_data)
+  
+  R_sq <- R_sq + R2(predictions, test_data$Price)
+  RMSE <- RMSE + RMSE(predictions, test_data$Price)
+  MAE <- MAE + MAE(predictions, test_data$Price)
+  
+}
+
+R_sq = R_sq / 20
+RMSE = RMSE / 20
+MAE = MAE / 20
+
+print(c(R_sq, RMSE, MAE))
+```
+
+The results are very similar to our model fitted to the entire data set. This stability is a strong indication that we performed our risidual analysis correctly and that we have met the model assumptions.
+
+## Final Thoughts
+
+do not want to extrapolate RVH convex hull

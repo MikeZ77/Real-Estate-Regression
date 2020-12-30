@@ -3,9 +3,11 @@ output:
   pdf_document: default
   html_document: default
 ---
-# A Step-By-Step Guide for Running a Complete Multilinear Regression Analysis in R
+# A Step-By-Step Guide for Running a Complete Multiple Linear Regression Analysis in R
 
-The point of this guide is to give new data scientists a step-by-step approach running a complete multilinear regression (MLE) analysis without needing a deep background in statistics. Just note that you should have a basic understanding of linear regression. At each step, I try and explain the theory (when necessary), concepts, and possible difficulties and pain points that may arise in your own data set. I recommend R for regression analysis over Python due to its simplicity (one-liners) and ease is plotting the required graphs. That being said, the same analysis can be completed in Python using a library like statsmodels. I break the analysis into five separate steps:
+The point of this guide is to give new data scientists a step-by-step approach running a complete multiple linear regression (MLR) analysis without needing a deep background in statistics. Just note that in order to get the most out of this material, you should be familiar with concepts of OLS (Ordinary Least Squares) for SLR (Simple Linear Regression). One issue I have found with many data science tutorials on the topic of regression is that the approach is incomplete. Only fitting a model and evaluating the R^2 is a simplified approach that is problematic. If certain model assumptions (more on this later) are not met: (1) This may result in biased estimators (do not minimize the variance) and as a result we will be left with a model that does not provide the best possible fit (leading to relatively worse prediction). (2) If we want to construct confidence intervals or hypothesis tests on our regression, these may be invalid. 
+
+Obviously, this detailed type of analysis is outside the scope of many of these courses (many of which assume no prior knowledge), but they should at the very least mention that there is more to it. If you are building a SLR or MLR model of substance that could be used for real decision making, you will want to complete the full analysis. My goal for this guide is to hopefully allow you to bridge the gap between an introductory tutorial on regression and a full semester undergraduate course on the topic. At each step, I try and explain the theory (when necessary), concepts, and possible difficulties and pain points that may arise in your own data set. I recommend R for regression analysis over Python due to its simplicity (one-liners) and ease is plotting the required graphs. That being said, the same analysis can be completed in Python using a library like statsmodels. I break the analysis into five separate steps:
 
 1. A brief description of the data
 2. Checking for multicollinearity
@@ -13,7 +15,7 @@ The point of this guide is to give new data scientists a step-by-step approach r
 4. Variable selection
 5. Model validation
 
-By the end, if the model has some explanatory power (explains the variance), it should be good to use for inference and prediction. For this guide, I am using a sample data set suitable for regression analysis available from Kaggle called Real Estate Price Predication (https://www.kaggle.com/quantbruce/real-estate-price-prediction). Obviously, for a domain like this, we are looking to predict and infer the price of a house.
+For this guide, I am using a sample data set suitable for regression analysis available from Kaggle called Real Estate Price Predication (https://www.kaggle.com/quantbruce/real-estate-price-prediction). For a domain like this, we are looking to predict and build confidence intervals around the price of a house.
 
 # A Brief Description of the Data
 

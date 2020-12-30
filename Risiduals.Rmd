@@ -1,7 +1,6 @@
 ```{r}
 
 df <- read.csv("real_estate2.csv")
-# df$Longitude <- NULL
 
 model <- lm(Price ~ ., data = df)
 
@@ -98,7 +97,7 @@ mean(resid(model))
 
 This should be evident through most of the plots. In particular, the Risiduals vs Index plot illustrates this well. Calculating the mean of the residuals shows that it is practically zero.
 
-## Residual vs. Index
+## The errors are uncorrelated
 
 ```{r}
 
@@ -153,7 +152,7 @@ plot(new_model, which = 5)
 
 ```
 
-I don't want to go into too many details with this, but basically a robust regression attempts to dampen highly influential observations that violate model assumptions by applying a double exponential distribution that is the basis for re-weighting the observations. Notice how the R^2 has dropped back down to .57.
+I don't want to go into too many details with this, but basically a robust regression attempts to dampen highly influential observations that violate model assumptions by applying a double exponential distribution that is the basis for re-weighting the observations (large risiduals are weighted less). Notice how the R^2 has dropped back down to .57.
 
 ```{r}
 library(MASS)
@@ -163,4 +162,9 @@ summary(robust_model)
 
 ```
 
-The one problem with this approach is that it is not a simple matter to compute the R^{2} for this model and it is not directly comparable to 
+The one problem with this approach is that it is not a simple matter to retrieve or compute the R^{2} for this model. Nonetheless, the more influential observations there are, the more effective an option this model should be.
+
+# If you are in a Rush
+
+Going over these plots can be a little bit exhausting, but I feel like its important for people new to MLE or regression in general to analyze these plots and get the intuition. Once you have done this enough times, I feel like it is fine to validate the model assumptions using the hypothesis tests available in R commands ("car" package) like ncvTest (tests homoscedasticity) or durbinWatsonTest (tests correlation between the errors). gvlma is a command which will test all the model assumptions in one go. A word of caution though, even though these commands give a yes or no answer, they are still subjective and open to interpretation. For example, if you choose an alpha_{crit}=0.05, and the p-value ends up being 0.04, you should still investigate and correct this issue if possible. You should also not "cherry-pick" and change your alpha_{crit} after the fact.
+
